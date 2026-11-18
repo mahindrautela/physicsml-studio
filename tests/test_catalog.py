@@ -3,13 +3,13 @@
 
 def test_catalog_lists_cards(client):
     cat = client.get("/api/catalog").json()
-    assert {m["id"] for m in cat["models"]} >= {"persistence", "linear"}
+    assert {m["id"] for m in cat["models"]} >= {"copy", "trend"}
     assert all(d["status"]["state"] == "ready" for d in cat["datasets"])
     assert cat["problems"] == []
 
 
 def test_add_and_remove_cards(client):
-    assert client.post("/api/models", json={"id": "Bad ID", "name": "x", "adapter": "persistence"}).status_code == 422
+    assert client.post("/api/models", json={"id": "Bad ID", "name": "x", "adapter": "test_copy"}).status_code == 422
     card = {"id": "extra", "name": "Extra", "source": {"type": "url", "url": "https://example.org/x.npy"}}
     added = client.post("/api/datasets", json=card)
     assert added.status_code == 201 and added.json()["status"]["state"] == "download"

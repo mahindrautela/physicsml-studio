@@ -29,4 +29,5 @@ export const api = {
   cancelRun: (id) => request('POST', `/api/runs/${id}/cancel`),
   deleteRun: (id) => request('DELETE', `/api/runs/${id}`),
   frame: (id, params) => request('GET', `/api/runs/${id}/frame?` + new URLSearchParams(params)),
+  rollout: (id, params) => request('GET', `/api/runs/${id}/rollout?` + new URLSearchParams(params)),
 };

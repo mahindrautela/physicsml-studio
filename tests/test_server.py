@@ -12,7 +12,7 @@ def test_page_and_assets_are_served(client):
 
 
 def test_cards_with_non_ascii_text_round_trip(client):
-    card = {"id": "unicode", "name": "Navier–Stokes 128×128", "adapter": "persistence",
+    card = {"id": "unicode", "name": "Navier–Stokes 128×128", "adapter": "test_copy",
             "description": "next = 2 × current − previous"}
     assert client.post("/api/models", json=card).status_code == 201
     saved = next(m for m in client.get("/api/catalog").json()["models"] if m["id"] == "unicode")

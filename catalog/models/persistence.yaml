@@ -1,7 +1,0 @@
-id: persistence
-name: Persistence baseline
-family: Baselines
-order: 1
-adapter: persistence
-description: Predicts that the field doesn't change. Any useful model should beat it.
-tags: [baseline]

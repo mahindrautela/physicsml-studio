@@ -19,14 +19,13 @@ app/                    the server
   datasets.py           read .npy/.nc/.h5 into the 7-D layout (N, T, F, C, D, H, W)
   runs.py               run records: start, list, read, stop, delete, and where files go
   runner.py             what a run does: one-step and rollout predictions, metrics, saving
-  frames.py             slices of saved predictions for the field viewer
+  frames.py             slices of saved predictions for the two viewer views
   metrics.py            MSE, RMSE, MAE, NRMSE, VRMSE; CSV export
   devices.py            CPU or GPU
   adapters/             one file per model type
     base.py             the interface every model type implements
     morph.py            MORPH
     pytorch.py          any exported PyTorch model (.pt2 / .pt)
-    baselines.py        persistence and linear extrapolation
     template.py         copy this to add a model type
     _revin.py, _torch.py  shared helpers
 static/                 the page
@@ -35,7 +34,9 @@ static/                 the page
   js/app.js             startup
   js/catalog.js         model and dataset lists (left column)
   js/runs.js            start runs, Results menu, progress
-  js/viewer.js          field viewer and timeline
+  js/viewer.js          Predicted fields: shared controls and the switch between its two views
+  js/rollout-view.js    "All rollout steps": truth and one model's prediction at every step
+  js/step-view.js       "One step at a time": every model at one step, with a timeline
   js/metrics.js         metrics table and charts
   js/forms.js           Add model / Add dataset dialogs
   js/api.js             calls to the server
@@ -55,8 +56,9 @@ tests/                  python -m pytest -q
 3. `runner.py` loads each model once (`adapters/`, `sources.py`) and reads each dataset once
    (`datasets.py`). For every model × dataset it predicts, scores (`metrics.py`), and saves the
    predictions as `.npy` files. It updates `run.json` as it goes.
-4. The page polls `GET /api/runs/<id>` every second and redraws. The viewer asks
-   `GET /api/runs/<id>/frame` (`frames.py`) for one time step at a time.
+4. The page polls `GET /api/runs/<id>` every second and redraws. The viewer asks `frames.py`
+   for data: `GET /api/runs/<id>/rollout` for all rollout steps of one model, or
+   `GET /api/runs/<id>/frame` for one time step of every model.
 
 ## Where to make common changes
 
@@ -68,6 +70,7 @@ tests/                  python -m pytest -q
 | what a run computes | `app/runner.py` |
 | a setting in the Settings panel | `RunSettings` in `app/runs.py`, the field in `static/index.html`, `readSettings()` in `static/js/runs.js` |
 | an API route | `app/main.py` (keep it thin) and `static/js/api.js` |
+| the All rollout steps view | `static/js/rollout-view.js`, its data in `rollout()` in `app/frames.py` |
 | how the page looks | `static/css/app.css`. Colors used in charts are in `static/js/colors.js`. |
 
 ## API
@@ -83,7 +86,8 @@ tests/                  python -m pytest -q
 | `POST /api/runs` | start a run |
 | `GET /api/runs`, `GET /api/runs/<id>` | run summaries, or one run record |
 | `POST /api/runs/<id>/cancel`, `DELETE /api/runs/<id>` | stop or delete a run |
-| `GET /api/runs/<id>/frame` | one viewer frame |
+| `GET /api/runs/<id>/rollout` | truth and one model's prediction at every rollout step |
+| `GET /api/runs/<id>/frame` | truth and every model's prediction and error at one time step |
 | `GET /api/runs/<id>/metrics.csv` | all metrics of a run |
 
 FastAPI also serves interactive API docs at http://127.0.0.1:8000/docs.

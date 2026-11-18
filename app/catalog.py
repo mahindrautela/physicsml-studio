@@ -76,7 +76,7 @@ class Source(BaseModel):
 class ModelCard(BaseModel):
     id: str
     name: str
-    adapter: str = Field(description="Which adapter runs this model, e.g. 'morph', 'torchscript', 'persistence'")
+    adapter: str = Field(description="Which model type runs this model, e.g. 'morph' or 'pytorch'")
     family: Optional[str] = None
     description: str = ""
     source: Source = Source()

@@ -209,6 +209,17 @@ def get_frame(run_id: str, dataset: str, models: str = "", sample: int = 0, t: i
         fail(400, e)
 
 
+@app.get("/api/runs/{run_id}/rollout")
+def get_rollout(run_id: str, dataset: str, model: str, sample: int = 0, field: int = 0, component: int = 0,
+                axis: Literal["d", "h", "w"] = "d", index: Optional[int] = Query(None)):
+    try:
+        return frames.rollout(run_id, dataset, model, sample, field, component, axis, index)
+    except FileNotFoundError as e:
+        fail(404, e)
+    except (KeyError, ValueError) as e:
+        fail(400, e)
+
+
 @app.get("/api/runs/{run_id}/metrics.csv", response_class=PlainTextResponse)
 def metrics_csv(run_id: str):
     try:

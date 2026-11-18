@@ -74,8 +74,8 @@
         <h1>Run models on datasets and compare what they predict</h1>
         <p>Pick one or more models and datasets on the left, then select Run. Every model runs on every
           dataset. Results appear here as each one finishes.</p>
-        <p class="muted">The two demo datasets are simulated on your machine, so the baselines run without any download.
-          MORPH weights and the FNS-KF file download from Hugging Face the first time you use them.</p>
+        <p class="muted">The two demo datasets are simulated on your machine. MORPH weights and the FNS-KF file
+          download from Hugging Face the first time you use them.</p>
       </div>
 
       <div id="run-view" hidden>
@@ -95,9 +95,16 @@
 
         <section class="viewer" aria-labelledby="h-viewer">
           <div class="viewer-bar">
-            <h2 id="h-viewer">Predicted fields</h2>
+            <div class="viewer-title">
+              <h2 id="h-viewer">Predicted fields</h2>
+              <div class="seg" id="view-switch" role="radiogroup" aria-label="View">
+                <button role="radio" data-view="rollout" aria-checked="true">All rollout steps</button>
+                <button role="radio" data-view="step" aria-checked="false">One step at a time</button>
+              </div>
+            </div>
             <div class="controls">
               <label>Dataset <select id="v-dataset"></select></label>
+              <label id="v-model-wrap">Model <select id="v-model"></select></label>
               <label>Trajectory <select id="v-sample"></select></label>
               <label>Field <select id="v-field"></select></label>
               <label id="v-comp-wrap">Component <select id="v-comp"></select></label>
@@ -105,25 +112,39 @@
                 <option value="d">depth (z)</option><option value="h">height (y)</option><option value="w">width (x)</option>
               </select></label>
               <label id="v-index-wrap" hidden>at <input type="number" id="v-index" min="0" value="0"></label>
-              <div class="seg" role="radiogroup" aria-label="Prediction type">
+              <div class="seg" id="mode-switch" role="radiogroup" aria-label="Prediction type" hidden>
                 <button role="radio" data-mode="rollout" aria-checked="true">Rollout</button>
                 <button role="radio" data-mode="onestep" aria-checked="false">One-step</button>
               </div>
             </div>
           </div>
           <p class="mode-note" id="mode-note"></p>
-          <div class="legends" id="legends"></div>
-          <div class="stage" id="stage"></div>
-          <div class="readout" id="readout" aria-live="off"></div>
-          <div class="timeline">
-            <button class="play" id="play" aria-label="Play">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path id="play-icon" d="M4 2.5v11l9-5.5z"/></svg>
-            </button>
-            <div class="timeline-body">
-              <div id="timeline-chart" class="timeline-chart"></div>
-              <input type="range" id="t-slider" min="0" max="1" value="0" aria-label="Time step">
+
+          <!-- All rollout steps: rollout-view.js -->
+          <div id="rollout-view">
+            <div class="legends" id="rollout-legend"></div>
+            <div class="paper rollout-paper" id="rollout-paper"><div class="rollout-grid" id="rollout-grid"></div></div>
+            <div class="rollout-footer">
+              <div class="readout" id="rollout-readout" aria-live="off"></div>
+              <label class="inline" id="rollout-every-wrap">Steps shown <select id="rollout-every"></select></label>
             </div>
-            <output id="t-label" for="t-slider"></output>
+          </div>
+
+          <!-- One step at a time: step-view.js -->
+          <div id="step-view" hidden>
+            <div class="legends" id="legends"></div>
+            <div class="paper stage" id="stage"></div>
+            <div class="readout" id="readout" aria-live="off"></div>
+            <div class="timeline">
+              <button class="play" id="play" aria-label="Play">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path id="play-icon" d="M4 2.5v11l9-5.5z"/></svg>
+              </button>
+              <div class="timeline-body">
+                <div id="timeline-chart" class="timeline-chart"></div>
+                <input type="range" id="t-slider" min="0" max="1" value="0" aria-label="Time step">
+              </div>
+              <output id="t-label" for="t-slider"></output>
+            </div>
           </div>
         </section>
 

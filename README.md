@@ -10,8 +10,7 @@ what they predict.
   table, as soon as each model finishes.
 - Models and datasets can come from Hugging Face, GitHub, any URL, or your own disk.
 
-It comes with [MORPH](https://github.com/lanl/MORPH/tree/package-morph), two baseline models
-and two small demo datasets.
+It comes with [MORPH](https://github.com/lanl/MORPH/tree/package-morph) and two small demo datasets.
 
 ## Quick start
 

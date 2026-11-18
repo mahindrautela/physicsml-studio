@@ -32,3 +32,10 @@ export const saved = {
   get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
   set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable */ } },
 };
+
+/** (rows, cols) of the picture a viewer frame shows: the grid for 2D data, the chosen plane for 3D data. */
+export function sliceShape(frame) {
+  const [D, H, W] = frame.grid;
+  if (frame.kind === '2d') return [H, W];
+  return { d: [H, W], h: [D, W], w: [D, H] }[frame.axis];
+}

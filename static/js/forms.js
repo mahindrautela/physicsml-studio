@@ -13,8 +13,6 @@ const DEFAULT_SETTINGS = {
 const TYPE_LABELS = {
   morph: 'MORPH checkpoint (.pth)',
   pytorch: 'PyTorch file: torch.export (.pt2) or TorchScript (.pt)',
-  persistence: 'Persistence baseline',
-  linear_extrapolation: 'Linear extrapolation baseline',
 };
 // What "Trajectories to evaluate" options mean on a dataset card.
 const SPLITS = {

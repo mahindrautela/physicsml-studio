@@ -67,3 +67,49 @@ export function logTicks(lo, hi) {
   if (vals.length < 2) return {}; // narrow range: let Plotly choose
   return { tickvals: vals, ticktext: vals.map((v) => String(+v.toPrecision(2))) };
 }
+
+// ---------------------------------------------------------------- field colour scales
+/**
+ * Colour scale for a field, from the truth's value range over the whole trajectory.
+ * Values that change sign get the diverging blue/red scale centred on zero.
+ */
+export function fieldScale([lo, hi]) {
+  if (lo < 0 && hi > 0) {
+    const m = Math.max(-lo, hi);
+    return { kind: 'diverging', zmin: -m, zmax: m };
+  }
+  return { kind: 'sequential', zmin: lo, zmax: hi === lo ? lo + 1e-9 : hi };
+}
+
+/**
+ * Error scale for one trajectory: the largest error over time, so growth stays visible.
+ * It stops at the field's own amplitude; a model that blows up would otherwise wash
+ * everyone else out, and an error that large means the prediction is wrong anyway.
+ */
+export function errorScale([lo, hi], errorMax) {
+  const amplitude = Math.max(Math.abs(lo), Math.abs(hi)) || 1e-9;
+  const e = errorMax > 0 ? errorMax : 1e-9;
+  return e > amplitude ? { emax: amplitude, capped: true } : { emax: e, capped: false };
+}
+
+/** A legend: title, then min value, colour ramp, max value. */
+export function colorLegend(title, kind, lo, hi, format, capped = false) {
+  const div = document.createElement('div');
+  div.className = 'legend';
+  div.innerHTML = `<b></b><span>${format(lo)}</span><span class="ramp"></span><span>${capped ? '≥ ' : ''}${format(hi)}</span>`;
+  div.querySelector('b').textContent = title;
+  div.querySelector('.ramp').style.background = gradient(kind);
+  return div;
+}
+
+/** value -> [r, g, b] for canvas drawing: a 256-entry lookup table built from a scale's colour stops. */
+export function colorLookup(kind, zmin, zmax) {
+  const stops = SCALES[mode()][kind].map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+  const table = Array.from({ length: 256 }, (_, i) => {
+    const x = (i / 255) * (stops.length - 1);
+    const a = stops[Math.floor(x)], b = stops[Math.min(Math.ceil(x), stops.length - 1)], f = x - Math.floor(x);
+    return a.map((c, k) => Math.round(c + (b[k] - c) * f));
+  });
+  const span = zmax - zmin || 1;
+  return (v) => table[Math.max(0, Math.min(255, Math.round(((v - zmin) / span) * 255)))];
+}

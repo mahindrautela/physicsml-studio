@@ -16,6 +16,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # for fake_models.py
 
 DATASETS = {
     # id: (array shape, card layout, evaluation split)
@@ -23,9 +24,10 @@ DATASETS = {
     "chlast": ((3, 5, 8, 8, 8, 1), {"axes": "NTDHWF"}, {"mode": "all"}),                             # 3D, channels last
     "one-d": ((5, 7, 32), {"axes": "NTW"}, {"mode": "last_fraction", "fraction": 0.4}),              # 1D
 }
-MODELS = {
-    "persistence": {"name": "Persistence", "adapter": "persistence"},
-    "linear": {"name": "Linear", "adapter": "linear_extrapolation"},
+MODELS = {  # fake model types from fake_models.py
+    "copy": {"name": "Copy", "adapter": "test_copy"},
+    "trend": {"name": "Trend", "adapter": "test_trend"},
+    "slow": {"name": "Slow copy", "adapter": "test_copy", "config": {"delay": 0.3}},
 }
 
 
@@ -53,6 +55,7 @@ def client(workspace):
     from fastapi.testclient import TestClient
 
     import app.main
+    import fake_models  # noqa: F401 - registers the test_copy and test_trend model types
 
     return TestClient(app.main.app)
 

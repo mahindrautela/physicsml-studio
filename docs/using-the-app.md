@@ -31,17 +31,37 @@ Past runs stay available from the **Results** menu at the top of the page. **Dow
   This shows how errors grow, which matters if you want to use the model as a simulator.
 
 Every model in a run is scored on the same time steps. A model that needs more input frames
-(the linear baseline needs two) moves the start for all of them.
+than the others moves the start for all of them.
 
-## The field viewer
+## Looking at predicted fields
+
+Choose the dataset, trajectory and field at the top of **Predicted fields**. For 3D data, also
+choose a slice direction and position. There are two views:
+
+**All rollout steps** (the default) shows one model's whole rollout at a glance:
+
+```
+            t=1   t=2   t=3   ...   t=20
+Truth      [  ]  [  ]  [  ]  ...   [  ]
+MORPH-Ti   [  ]  [  ]  [  ]  ...   [  ]
+```
+
+- Pick the model with the **Model** menu.
+- Truth and prediction share one color scale, so differences show up directly.
+- When there are many steps, **Steps shown** picks every 2nd, 4th, ... step; the last step is
+  always shown. Choose *all* to see every step and scroll sideways.
+- Hover over a tile to read the truth, prediction and error at that point.
+- Click a tile to open that step in the other view.
+- 1D data shows as two pictures, truth and prediction, with the grid across and time down.
+
+**One step at a time** compares every model at a single time step:
 
 - **Truth** sits on the left. Each model gets a column with its prediction above its error.
-- Truth and predictions share one color scale, and the errors share another. Both scales stay
-  fixed while you move through time.
-- Hover over any panel to read the values at that point in every panel.
+  The error scale also stays fixed over time.
+- Switch between **Rollout** and **One-step** predictions.
 - The **timeline** under the panels plots each model's error at every step. Drag the slider,
   click the chart, or press play.
-- 1D data shows as line charts. For 3D data, choose a slice direction and position.
+- 1D data shows as line charts.
 
 ## Metrics
 

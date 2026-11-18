@@ -45,8 +45,6 @@ address, and `path` for a local file. A local path may start with `$STUDIO_HOME`
 |---|---|---|
 | `morph` | MORPH checkpoints, pretrained or fine-tuned (see [MORPH notes](morph.md)) | `.pth` |
 | `pytorch` | any PyTorch model, without writing code for the app | `.pt2` or `.pt` |
-| `persistence` | baseline: predicts no change | none |
-| `linear_extrapolation` | baseline: next = 2 × current − previous | none |
 
 The settings each type accepts are listed at the top of its file in `app/adapters/`.
 

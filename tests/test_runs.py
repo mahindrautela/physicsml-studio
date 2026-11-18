@@ -6,22 +6,28 @@ import pytest
 
 
 def test_run_every_model_on_every_dataset(client, wait_for_run):
-    started = client.post("/api/runs", json={"models": ["persistence", "linear"], "datasets": ["two-d", "chlast", "one-d"],
+    started = client.post("/api/runs", json={"models": ["copy", "trend"], "datasets": ["two-d", "chlast", "one-d"],
                                              "settings": {"max_trajectories": 3, "viz_samples": 2}})
     assert started.status_code == 201, started.text
     run = wait_for_run(started.json()["id"])
     assert run["status"] == "done", run["log"]
     pairs = {(p["model"], p["dataset"]): p for p in run["pairs"]}
-    # the linear baseline needs 2 frames, so every model's rollout starts after step 1
+    # the trend model needs 2 frames, so every model's rollout starts after step 1
     assert {p["metrics"]["rollout_start"] for p in run["pairs"]} == {1}
-    assert pairs[("persistence", "one-d")]["metrics"]["trajectories"] == 2  # 40% of 5
+    assert pairs[("copy", "one-d")]["metrics"]["trajectories"] == 2  # 40% of 5
 
     frame = client.get(f"/api/runs/{run['id']}/frame", params={
-        "dataset": "chlast", "models": "persistence,linear", "t": 2, "axis": "h", "index": 3}).json()
-    assert frame["kind"] == "3d" and len(frame["truth"]) == 8 and frame["models"]["linear"]["pred"]
+        "dataset": "chlast", "models": "copy,trend", "t": 2, "axis": "h", "index": 3}).json()
+    assert frame["kind"] == "3d" and len(frame["truth"]) == 8 and frame["models"]["trend"]["pred"]
     one_d = client.get(f"/api/runs/{run['id']}/frame", params={
-        "dataset": "one-d", "models": "linear", "t": 1, "mode": "onestep"}).json()
-    assert one_d["kind"] == "1d" and one_d["models"]["linear"] is None  # needs two earlier frames
+        "dataset": "one-d", "models": "trend", "t": 1, "mode": "onestep"}).json()
+    assert one_d["kind"] == "1d" and one_d["models"]["trend"] is None  # needs two earlier frames
+
+    strip = client.get(f"/api/runs/{run['id']}/rollout", params={"dataset": "two-d", "model": "copy"}).json()
+    assert strip["start"] == 1 and strip["steps"] == [2, 3, 4, 5]  # T = 6, rollout after step 1
+    assert len(strip["truth"]) == len(strip["pred"]) == 4 and len(strip["pred"][0]) == 16
+    assert strip["pred"][0] == strip["pred"][-1]  # the copy model keeps repeating the frame it was given
+    assert client.get(f"/api/runs/{run['id']}/rollout", params={"dataset": "two-d", "model": "nope"}).status_code == 404
 
     csv = client.get(f"/api/runs/{run['id']}/metrics.csv").text
     assert csv.count("\n") == 1 + 6  # header + 2 models × 3 datasets
@@ -36,12 +42,8 @@ def test_missing_weights_fail_with_a_clear_message(client, wait_for_run):
     client.delete("/api/models/ghost")
 
 
-def test_stop_then_delete_a_run(client, wait_for_run, monkeypatch):
-    from app.adapters.baselines import Persistence
-
-    real_predict = Persistence.predict
-    monkeypatch.setattr(Persistence, "predict", lambda self, f, t: (time.sleep(0.3), real_predict(self, f, t))[1])
-    run_id = client.post("/api/runs", json={"models": ["persistence"], "datasets": ["two-d", "one-d"]}).json()["id"]
+def test_stop_then_delete_a_run(client, wait_for_run):
+    run_id = client.post("/api/runs", json={"models": ["slow"], "datasets": ["two-d", "one-d"]}).json()["id"]
     time.sleep(0.6)
     assert client.post(f"/api/runs/{run_id}/cancel").status_code == 200
     assert wait_for_run(run_id)["status"] == "cancelled"
