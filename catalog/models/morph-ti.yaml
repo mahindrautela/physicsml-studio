@@ -1,0 +1,29 @@
+id: morph-ti
+name: MORPH-Ti
+family: MORPH foundation models
+order: 10
+adapter: morph
+description: >-
+  Pretrained PDE foundation model from LANL (size Ti). Predicts the next frame of a
+  1D, 2D or 3D simulation with up to 3 fields and 3 components, on grids up to 128x128x128.
+source:
+  type: huggingface
+  repo_id: mahindrautela/MORPH
+  subfolder: models/FM
+  filename: morph-Ti-FM-max_ar1_ep225.pth
+config:
+  size: Ti
+  max_ar: 1
+  ar_order: 1
+  normalization: trajectory
+  batch_size: 8
+requires: [morph_pde]
+install_hint: pip install "git+https://github.com/lanl/MORPH.git@package-morph"
+links:
+  - {label: Code (GitHub), url: "https://github.com/lanl/MORPH/tree/package-morph"}
+  - {label: Weights (Hugging Face), url: "https://huggingface.co/mahindrautela/MORPH"}
+  - {label: Paper (arXiv 2509.21670), url: "https://arxiv.org/abs/2509.21670"}
+tags: [foundation model, transformer, pretrained]
+notes: >-
+  Zero-shot use of the pretrained checkpoint (no fine-tuning). Normalization follows
+  MORPH's own scripts: each trajectory is scaled by its own mean and variance.

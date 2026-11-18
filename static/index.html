@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inference Studio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2318212b'/%3E%3Cpath d='M3 11c2-6 4-6 5 0s3 6 5 0' stroke='%23fff' stroke-width='1.6' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="vendor/plotly.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 11c2-6 4-6 5 0s3 6 5 0" /></svg>
+      <span>Inference Studio</span>
+    </div>
+    <label class="history">
+      <span>Results</span>
+      <select id="run-select" aria-label="Choose a run to view"></select>
+    </label>
+    <div class="sys" id="sys-line" aria-live="polite"></div>
+  </header>
+
+  <main class="layout">
+    <!-- Left: build a run -->
+    <aside class="rail" aria-label="Set up a run">
+      <section class="step" aria-labelledby="h-models">
+        <div class="step-head">
+          <h2 id="h-models"><span class="num">1</span>Models</h2>
+          <button class="ghost small" id="add-model">Add model</button>
+        </div>
+        <ul class="cards" id="model-list" role="list"></ul>
+      </section>
+
+      <section class="step" aria-labelledby="h-data">
+        <div class="step-head">
+          <h2 id="h-data"><span class="num">2</span>Datasets</h2>
+          <button class="ghost small" id="add-dataset">Add dataset</button>
+        </div>
+        <ul class="cards" id="dataset-list" role="list"></ul>
+      </section>
+
+      <section class="step" aria-labelledby="h-settings">
+        <div class="step-head"><h2 id="h-settings"><span class="num">3</span>Settings</h2></div>
+        <div class="settings">
+          <label>Trajectories per dataset
+            <input type="number" id="s-traj" min="1" max="10000" value="8">
+          </label>
+          <label>Rollout steps <small>0 = all available</small>
+            <input type="number" id="s-steps" min="0" value="0">
+          </label>
+          <label>Start rollout after step
+            <input type="number" id="s-start" min="0" value="0">
+          </label>
+          <label>Trajectories saved for viewing
+            <input type="number" id="s-viz" min="1" max="16" value="3">
+          </label>
+          <label>Device
+            <select id="s-device"></select>
+          </label>
+          <label>Run name <small>optional</small>
+            <input type="text" id="s-name" placeholder="e.g. MORPH sizes on FNS-KF">
+          </label>
+        </div>
+        <button class="primary" id="run-btn" disabled>Choose models and datasets</button>
+        <p class="hint" id="run-hint"></p>
+      </section>
+    </aside>
+
+    <!-- Right: results -->
+    <section class="results" aria-label="Results">
+      <div class="empty" id="empty">
+        <h1>Run models on datasets and compare what they predict</h1>
+        <p>Pick one or more models and datasets on the left, then select Run. Every model runs on every
+          dataset. Results appear here as each one finishes.</p>
+        <p class="muted">The two demo datasets are simulated on your machine, so the baselines run without any download.
+          MORPH weights and the FNS-KF file download from Hugging Face the first time you use them.</p>
+      </div>
+
+      <div id="run-view" hidden>
+        <div class="run-head">
+          <div>
+            <h1 id="run-title"></h1>
+            <p class="run-meta" id="run-meta"></p>
+          </div>
+          <div class="run-actions">
+            <button class="ghost" id="stop-btn" hidden>Stop run</button>
+            <a class="ghost button" id="csv-btn" href="#" download>Download metrics (CSV)</a>
+            <button class="ghost" id="delete-run-btn">Delete run</button>
+          </div>
+        </div>
+
+        <ol class="progress" id="progress" aria-live="polite"></ol>
+
+        <section class="viewer" aria-labelledby="h-viewer">
+          <div class="viewer-bar">
+            <h2 id="h-viewer">Predicted fields</h2>
+            <div class="controls">
+              <label>Dataset <select id="v-dataset"></select></label>
+              <label>Trajectory <select id="v-sample"></select></label>
+              <label>Field <select id="v-field"></select></label>
+              <label id="v-comp-wrap">Component <select id="v-comp"></select></label>
+              <label id="v-axis-wrap" hidden>Slice <select id="v-axis">
+                <option value="d">depth (z)</option><option value="h">height (y)</option><option value="w">width (x)</option>
+              </select></label>
+              <label id="v-index-wrap" hidden>at <input type="number" id="v-index" min="0" value="0"></label>
+              <div class="seg" role="radiogroup" aria-label="Prediction type">
+                <button role="radio" data-mode="rollout" aria-checked="true">Rollout</button>
+                <button role="radio" data-mode="onestep" aria-checked="false">One-step</button>
+              </div>
+            </div>
+          </div>
+          <p class="mode-note" id="mode-note"></p>
+          <div class="legends" id="legends"></div>
+          <div class="stage" id="stage"></div>
+          <div class="readout" id="readout" aria-live="off"></div>
+          <div class="timeline">
+            <button class="play" id="play" aria-label="Play">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path id="play-icon" d="M4 2.5v11l9-5.5z"/></svg>
+            </button>
+            <div class="timeline-body">
+              <div id="timeline-chart" class="timeline-chart"></div>
+              <input type="range" id="t-slider" min="0" max="1" value="0" aria-label="Time step">
+            </div>
+            <output id="t-label" for="t-slider"></output>
+          </div>
+        </section>
+
+        <section class="metrics" aria-labelledby="h-metrics">
+          <div class="viewer-bar">
+            <h2 id="h-metrics">Error metrics</h2>
+            <p class="muted small-text">NRMSE and VRMSE have no units, so they compare across datasets. Lower is better; the best value per dataset is in bold.</p>
+          </div>
+          <div class="table-wrap"><table id="metrics-table"></table></div>
+          <div class="chart-grid">
+            <figure class="chart">
+              <figcaption>How error grows during the rollout
+                <label class="inline"><input type="checkbox" id="growth-log"> Log scale</label>
+              </figcaption>
+              <div id="growth-charts" class="growth"></div>
+            </figure>
+            <figure class="chart">
+              <figcaption>
+                Compare models
+                <select id="bar-metric" aria-label="Metric for the bar chart">
+                  <option value="onestep.nrmse">One-step NRMSE</option>
+                  <option value="onestep.vrmse">One-step VRMSE</option>
+                  <option value="rollout.nrmse">Rollout NRMSE (mean over steps)</option>
+                  <option value="timing.ms_per_frame">Time per frame (ms)</option>
+                </select>
+              </figcaption>
+              <div id="bar-chart" class="bar"></div>
+            </figure>
+          </div>
+        </section>
+
+        <details class="log">
+          <summary>Run log</summary>
+          <pre id="log"></pre>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add model -->
+  <dialog id="dlg-model" aria-labelledby="dm-title">
+    <form method="dialog" id="form-model">
+      <h2 id="dm-title">Add a model</h2>
+      <label>Name <input name="card_name" required placeholder="MORPH-Ti fine-tuned on my data"></label>
+      <label>Model type
+        <select name="adapter" id="dm-adapter"></select>
+        <small id="dm-adapter-help"></small>
+      </label>
+      <fieldset id="dm-source">
+        <legend>Weights file</legend>
+        <label>Link or path
+          <input name="link" placeholder="https://huggingface.co/owner/repo/blob/main/model.pth">
+          <small>Hugging Face or GitHub file link, any https URL, or a path on this computer.</small>
+        </label>
+        <p class="parsed" id="dm-parsed"></p>
+      </fieldset>
+      <label>Settings for this model type <small>JSON, pre-filled with defaults</small>
+        <textarea name="config" rows="6" spellcheck="false"></textarea>
+      </label>
+      <label>Description <textarea name="description" rows="2"></textarea></label>
+      <label>Required Python package <small>optional, e.g. morph_pde</small><input name="requires"></label>
+      <p class="form-error" id="dm-error" role="alert"></p>
+      <div class="dlg-actions">
+        <button class="ghost" value="cancel" formnovalidate>Cancel</button>
+        <button class="primary" id="dm-save" value="save">Save model</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add dataset -->
+  <dialog id="dlg-dataset" aria-labelledby="dd-title">
+    <form method="dialog" id="form-dataset">
+      <h2 id="dd-title">Add a dataset</h2>
+      <label>Name <input name="card_name" required placeholder="Shallow water, 2D"></label>
+      <label>Link or path to the data file
+        <input name="link" required placeholder="https://huggingface.co/datasets/owner/repo/blob/main/data.h5">
+        <small>.npy, .nc or .h5 files. Hugging Face or GitHub file link, any https URL, or a path on this computer.</small>
+      </label>
+      <p class="parsed" id="dd-parsed"></p>
+      <div class="row">
+        <button class="ghost" id="dd-inspect" type="button">Look inside the file</button>
+        <small>Downloads the file if needed and lists its arrays.</small>
+      </div>
+      <label id="dd-var-wrap" hidden>Array to use <select name="variable" id="dd-var"></select></label>
+      <fieldset>
+        <legend>How the array is laid out</legend>
+        <p class="small-text">First two axes are trajectories (N) and time (T). Describe the rest either with axis letters
+          or with sizes. Letters: F field, C component, D depth, H height, W width.</p>
+        <label>Axis letters <small>e.g. NTFHW, or NTHWF for channels-last</small><input name="axes" placeholder="NTFHW"></label>
+        <p class="small-text">or sizes (used when axis letters are empty):</p>
+        <div class="sizes">
+          <label>F <input type="number" name="fields" min="1" value="1"></label>
+          <label>C <input type="number" name="components" min="1" value="1"></label>
+          <label>D <input type="number" name="depth" min="1" value="1"></label>
+          <label>H <input type="number" name="height" min="1" value="1"></label>
+          <label>W <input type="number" name="width" min="1" value="1"></label>
+        </div>
+      </fieldset>
+      <label>Field names <small>comma separated, optional</small><input name="field_names" placeholder="u, v"></label>
+      <label>Trajectories to evaluate
+        <select name="eval">
+          <option value="last_fraction">Last 10% of the file</option>
+          <option value="all">All</option>
+          <option value="first_n">First 10</option>
+        </select>
+      </label>
+      <label>Description <textarea name="description" rows="2"></textarea></label>
+      <p class="form-error" id="dd-error" role="alert"></p>
+      <div class="dlg-actions">
+        <button class="ghost" value="cancel" formnovalidate>Cancel</button>
+        <button class="primary" id="dd-save" value="save">Save dataset</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

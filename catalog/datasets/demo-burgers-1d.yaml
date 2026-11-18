@@ -1,0 +1,12 @@
+id: demo-burgers-1d
+name: Demo Burgers equation (1D)
+order: 2
+description: >-
+  Small viscous Burgers simulation made by tools/make_demo_data.py: 16 trajectories,
+  21 steps, 256 grid points. Shocks form and travel.
+source: {type: local, path: $STUDIO_HOME/demo/burgers1d.npy}
+format: npy
+layout: {axes: NTW}
+field_names: [u]
+eval: {mode: all}
+tags: [demo, 1D]

@@ -1,0 +1,20 @@
+id: fns-kf
+name: FNS-KF (PDEGym), file solution_0
+order: 10
+description: >-
+  Forced Navier–Stokes, Kolmogorov flow, 128×128, from the PDEGym collection. This is the
+  file used in MORPH's user-guide demo. Large download on first use.
+source:
+  type: huggingface
+  repo_id: camlab-ethz/FNS-KF
+  repo_type: dataset
+  filename: solution_0.nc
+format: nc
+layout: {fields: 2, components: 1, depth: 1, height: 128, width: 128}
+eval: {mode: last_fraction, fraction: 0.1}
+links:
+  - {label: Dataset (Hugging Face), url: "https://huggingface.co/datasets/camlab-ethz/FNS-KF"}
+tags: [2D, fluid, PDEGym]
+notes: >-
+  Layout matches MORPH's demo (--dataset_specs 2 1 1 128 128). MORPH's scripts pick test
+  trajectories with a random 80/10/10 split; here the last 10% of the file are used.

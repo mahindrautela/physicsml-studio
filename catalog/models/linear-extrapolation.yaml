@@ -1,0 +1,7 @@
+id: linear-extrapolation
+name: Linear extrapolation baseline
+family: Baselines
+order: 2
+adapter: linear_extrapolation
+description: Continues the most recent change (next = 2 × current − previous). Uses two input frames.
+tags: [baseline]

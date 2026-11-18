@@ -1,0 +1,13 @@
+id: demo-kolmogorov-2d
+name: Demo Kolmogorov flow (2D)
+order: 1
+description: >-
+  Small forced Navier–Stokes simulation made by tools/make_demo_data.py: 10 trajectories,
+  21 steps, velocity u and v on a 128×128 grid. Same layout as MORPH's FNS-KF demo, so it
+  works without any download.
+source: {type: local, path: $STUDIO_HOME/demo/kolmogorov2d.npy}
+format: npy
+layout: {fields: 2, components: 1, depth: 1, height: 128, width: 128}
+field_names: [u, v]
+eval: {mode: all}
+tags: [demo, 2D, fluid]
