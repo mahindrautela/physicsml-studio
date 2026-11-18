@@ -1,4 +1,4 @@
-/* Inference Studio
+/* PhysicsML Studio
    Chrome stays cool and achromatic so color is reserved for data: fields, errors, models.
    The one decorative element is the computational-grid paper behind the field viewer. */
 
@@ -125,6 +125,8 @@ label small { font-weight: 400; }
 .cards > li { border-bottom: 1px solid var(--line); }
 .card-row { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: var(--s2); padding: 8px 2px; }
 .card-row input[type=checkbox] { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--ink); }
+.card-text { display: block; font-weight: 400; font-size: 14px; }
+.card-actions { display: flex; gap: 6px; align-items: flex-start; }
 .card-name { font-weight: 600; cursor: pointer; }
 .card-sub { display: block; font-size: 12.5px; color: var(--muted); }
 .card-sub .state::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; background: var(--muted); }
@@ -200,14 +202,19 @@ label small { font-weight: 400; }
   border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: var(--s4); display: flex; flex-wrap: wrap; gap: var(--s4); align-items: flex-start; min-height: 220px;
 }
-.col { display: grid; gap: var(--s2); width: var(--panel-w, 240px); }
+.col { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); width: var(--panel-w, 240px); }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 6px 6px 4px; }
 .panel h3 { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin: 0 2px 4px; }
 .panel h3 .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
-.panel h3 small { margin-left: auto; font-variant-numeric: tabular-nums; }
+.panel h3 .title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel h3 small { margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
+.plot-wrap { position: relative; }
 .panel .plot { width: 100%; aspect-ratio: var(--aspect, 1); }
-.panel .na { aspect-ratio: var(--aspect, 1); display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 12.5px; padding: var(--s3); background: repeating-linear-gradient(135deg, transparent 0 6px, var(--grid-fine) 6px 7px); }
-.panel.blank { background: transparent; border-style: dashed; }
+.panel .na {  /* covers the plot when a model has no prediction for this step */
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  color: var(--muted); font-size: 12.5px; padding: var(--s3); background: var(--panel);
+  background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--grid-fine) 6px 7px);
+}
 .stage.wide { display: grid; }
 .stage.wide .panel .plot { aspect-ratio: auto; height: 260px; }
 .stage-msg { color: var(--muted); align-self: center; margin: auto; text-align: center; max-width: 50ch; }

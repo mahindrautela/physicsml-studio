@@ -1,16 +1,11 @@
-// Field viewer: truth next to each model's prediction and error, a timeline
-// whose track is the error curve, and a linked readout under the cursor.
+// Field viewer: the true field next to each model's prediction and error,
+// a timeline drawn on top of the error curves, and a readout under the cursor.
+//
+// Data comes from /api/runs/<id>/frame (app/frames.py), one time step at a time.
 import { api } from './api.js';
 import { baseLayout, css, gradient, logTicks, plotConfig, scale, seriesColor } from './colors.js';
+import { $, fmt } from './util.js';
 
-const $ = (id) => document.getElementById(id);
-export const fmt = (v) => {
-  if (v == null || Number.isNaN(v)) return '–';
-  const a = Math.abs(v);
-  if (a < 1e-12) return '0';
-  if (a !== 0 && (a >= 1e4 || a < 1e-3)) return v.toExponential(2);
-  return String(+v.toPrecision(4));
-};
 const PLAY = 'M4 2.5v11l9-5.5z';
 const PAUSE = 'M4 2.5h3v11H4zM9 2.5h3v11H9z';
 
@@ -94,6 +89,14 @@ export class Viewer {
   }
 
   // ---------------------------------------------------------------- run updates
+  /** Forget drawn panels and charts so the next setRun() redraws everything (e.g. new color scheme). */
+  reset() {
+    this.layoutKey = null;
+    this.doneKey = null;
+    this.chartReady = false;
+    Plotly.purge(this.el.chart);
+  }
+
   setRun(run) {
     const fresh = !this.run || this.run.id !== run.id;
     if (fresh) {
@@ -247,19 +250,24 @@ export class Viewer {
     const mk = (title, color, id) => {
       const panel = document.createElement('div');
       panel.className = 'panel';
-      panel.style.position = 'relative';
       const h = document.createElement('h3');
       if (color) { const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = color; h.append(sw); }
-      h.append(title);
+      const name = document.createElement('span');
+      name.className = 'title';
+      name.textContent = title;
+      name.title = title; // full name on hover when it's cut short
+      h.append(name);
       const small = document.createElement('small');
       h.append(small);
+      const wrap = document.createElement('div');
+      wrap.className = 'plot-wrap';
       const plot = document.createElement('div');
       plot.className = 'plot';
-      const na = document.createElement('div');
+      const na = document.createElement('div'); // shown over the plot when there's no prediction
       na.className = 'na';
-      na.style.cssText = 'position:absolute; left:6px; right:6px; bottom:4px;';
       na.hidden = true;
-      panel.append(h, plot, na);
+      wrap.append(plot, na);
+      panel.append(h, wrap);
       this.panels[id] = { panel, plot, na, small };
       return panel;
     };
@@ -330,7 +338,6 @@ export class Viewer {
       for (const [panel, z, zmin, zmax, cs] of [[p, d?.pred, f.zmin, f.zmax, f.colorscale], [e, d?.error, 0, emax, scale('error')]]) {
         panel.na.hidden = !!d;
         panel.na.textContent = d ? '' : msg;
-        if (d) panel.na.style.height = `${panel.plot.clientHeight}px`;
         Plotly.react(panel.plot, d ? heat(z, zmin, zmax, cs) : [], layout(), plotConfig);
       }
       p.small.textContent = d ? `NRMSE ${fmt(frameNrmse(d.error, data.truth))}` : '';

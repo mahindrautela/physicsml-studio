@@ -1,6 +1,6 @@
-// Metrics table and comparison charts for a run.
+// Metrics table and comparison charts for a run. Metric definitions: app/metrics.py.
 import { baseLayout, css, logTicks, plotConfig, seriesColor } from './colors.js';
-import { fmt } from './viewer.js';
+import { esc, fmt } from './util.js';
 
 const get = (obj, path) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
 
@@ -140,5 +140,4 @@ function renderBars(run) {
   }), plotConfig);
 }
 
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
