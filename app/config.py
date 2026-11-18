@@ -1,4 +1,4 @@
-"""Where Inference Studio keeps its files.
+"""Where PhysicsML Studio keeps its files.
 
 Everything can be moved with environment variables, so the same code works on a
 laptop, a lab server, or a cluster node:

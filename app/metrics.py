@@ -52,3 +52,30 @@ def per_step_nrmse(pred: np.ndarray, true: np.ndarray) -> list[float]:
         den = _per_traj(true[:, s].astype(np.float64) ** 2)
         out.append(float(np.mean(np.sqrt(num / (den + EPS)))))
     return out
+
+
+# ---------------------------------------------------------------- export
+CSV_COLUMNS = [
+    "model", "dataset", "status", "trajectories",
+    "onestep_mse", "onestep_rmse", "onestep_mae", "onestep_nrmse", "onestep_vrmse",
+    "rollout_steps", "rollout_nrmse", "rollout_vrmse", "rollout_final_nrmse",
+    "ms_per_frame", "parameters_m", "error",
+]
+
+
+def to_csv(run: dict) -> str:
+    """One row per model × dataset of a run record."""
+    lines = [",".join(CSV_COLUMNS)]
+    for pair in run["pairs"]:
+        m = pair.get("metrics") or {}
+        one, roll = m.get("onestep", {}), m.get("rollout", {})
+        curve = roll.get("per_step_nrmse") or [None]
+        row = [
+            pair["model"], pair["dataset"], pair["status"], m.get("trajectories"),
+            one.get("mse"), one.get("rmse"), one.get("mae"), one.get("nrmse"), one.get("vrmse"),
+            m.get("rollout_steps"), roll.get("nrmse"), roll.get("vrmse"), curve[-1],
+            (pair.get("timing") or {}).get("ms_per_frame"), (pair.get("info") or {}).get("parameters_m"),
+            (pair.get("error") or "").replace(",", ";").replace("\n", " "),
+        ]
+        lines.append(",".join("" if x is None else str(x) for x in row))
+    return "\n".join(lines) + "\n"

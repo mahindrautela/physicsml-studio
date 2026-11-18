@@ -1,4 +1,4 @@
-# Inference Studio — Python 3.10 or newer.
+# PhysicsML Studio — Python 3.10 or newer.
 # For an NVIDIA GPU, install the CUDA build of PyTorch first (see README), then this file.
 fastapi>=0.110
 uvicorn[standard]>=0.29
