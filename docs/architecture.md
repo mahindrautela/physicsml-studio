@@ -86,7 +86,7 @@ tests/                  python -m pytest -q
 | `GET /api/runs/<id>/frame` | one viewer frame |
 | `GET /api/runs/<id>/metrics.csv` | all metrics of a run |
 
-FastAPI also serves interactive API docs at http://localhost:8000/docs.
+FastAPI also serves interactive API docs at http://127.0.0.1:8000/docs.
 
 ## Checking a change
 

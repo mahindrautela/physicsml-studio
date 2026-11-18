@@ -5,6 +5,7 @@ Start the server with:  python studio.py
 """
 from __future__ import annotations
 
+import mimetypes
 import platform
 import sys
 from typing import Literal, NoReturn, Optional
@@ -219,4 +220,9 @@ def metrics_csv(run_id: str):
 
 
 # The page itself. Mounted last so it doesn't shadow the API routes.
+# Windows can map .js to "text/plain" in its registry, and browsers refuse to run
+# JavaScript modules served that way (the page stays blank). Set the types explicitly.
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("font/woff2", ".woff2")
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

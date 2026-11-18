@@ -2,18 +2,36 @@
 
 ## Install
 
-You need **Python 3.10 or newer** and **git**. A venv or a conda environment both work.
+You need **Python 3.10 or newer** and **git**. Get the code:
 
 ```bash
 git clone https://github.com/mahindrautela/physicsml-studio.git
 cd physicsml-studio
+```
+
+Then install the packages into a venv or a conda environment.
+
+**With a venv** (macOS, Linux):
+
+```bash
 python -m venv .venv
-source .venv/bin/activate            # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+**With conda** (for example in the Anaconda Prompt on Windows):
+
+```bash
+conda create -n physicsml python=3.11
+conda activate physicsml
+pip install -r requirements.txt
+```
+
+Install into the same environment you start the app from. If `python studio.py` reports
+missing packages, the environment that's active isn't the one you installed into.
+
 `requirements.txt` also installs MORPH's code from GitHub (the `morph-pde` line, which is why
-git is needed). If you don't use MORPH, you can delete that line.
+git is needed). If you don't use MORPH, or GitHub is blocked, delete that line.
 
 Don't reuse the `environment.yml` from the MORPH repo. It pins Python 3.8, which is too old.
 
@@ -36,8 +54,9 @@ The app uses the GPU automatically. The top bar shows which GPUs PyTorch found.
 python studio.py
 ```
 
-Your browser opens at http://localhost:8000. The first start takes about 30 seconds while the two
-demo datasets are simulated.
+The first start simulates the two demo datasets, which takes 10 to 60 seconds and shows its
+progress. Then the window prints `PhysicsML Studio is running at http://127.0.0.1:8000`, and
+your browser opens there. Keep the window open while you use the app; press Ctrl+C in it to stop.
 
 | Option | What it does |
 |---|---|
@@ -51,13 +70,15 @@ and Safari also support.
 
 ## On a remote server or cluster node
 
-Start it on the remote machine with the default host, then forward the port from your laptop:
+Start the app on the remote machine with the default host. Then forward the port from your
+laptop over SSH, and open http://127.0.0.1:8000 on the laptop:
 
 ```bash
-ssh -L 8000:localhost:8000 you@server      # then open http://localhost:8000 on your laptop
+ssh -L 8000:localhost:8000 you@server
+ssh -J you@login-node -L 8000:localhost:8000 you@compute-node    # app on a cluster compute node
 ```
 
-On a cluster, run it inside an interactive job on a GPU node, and forward the port to that node.
+If the page doesn't open, see [Troubleshooting](troubleshooting.md#the-page-doesnt-open).
 
 ## Where files go
 
@@ -68,7 +89,9 @@ On a cluster, run it inside an interactive job on a GPU node, and forward the po
 | `workspace/runs/` | results of every run | `STUDIO_HOME=/path` |
 | `workspace/demo/` | the simulated demo datasets | `STUDIO_HOME=/path` |
 
-Point `STUDIO_HOME` at scratch space on a cluster. Point `STUDIO_CATALOG` at a shared folder so
-a team sees the same models and datasets.
+Set them before starting: `export STUDIO_HOME=/scratch/me/studio` on macOS and Linux, or
+`set STUDIO_HOME=D:\studio` in the Windows command prompt. Point `STUDIO_HOME` at scratch
+space on a cluster. Point `STUDIO_CATALOG` at a shared folder so a team sees the same models
+and datasets.
 
 For private repositories, set `HF_TOKEN` (Hugging Face) or `GITHUB_TOKEN` (GitHub) before you start.

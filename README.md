@@ -15,14 +15,16 @@ and two small demo datasets.
 
 ## Quick start
 
+In a Python 3.10+ environment (venv or conda), from this folder:
+
 ```bash
-python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python studio.py
 ```
 
-Your browser opens at http://localhost:8000. You need Python 3.10+ and git. For an NVIDIA GPU,
-see [Getting started](docs/getting-started.md) first.
+Your browser opens at http://127.0.0.1:8000. See [Getting started](docs/getting-started.md) for
+setting up the environment, Windows, GPUs and servers, and [Troubleshooting](docs/troubleshooting.md)
+if the page doesn't open.
 
 ## Guides
 

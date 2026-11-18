@@ -174,7 +174,7 @@ def load_all(kind: str) -> tuple[list[BaseModel], list[dict]]:
     cards, problems = [], []
     for f in sorted(_dir(kind).glob("*.y*ml")):
         try:
-            data = yaml.safe_load(f.read_text()) or {}
+            data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
             cards.append(cls(**data))
         except Exception as e:  # noqa: BLE001 - show the user what is wrong with the file
             problems.append({"file": f.name, "error": str(e)})
@@ -194,14 +194,14 @@ def save(kind: str, card: BaseModel, overwrite: bool = False) -> Path:
     if path.exists() and not overwrite:
         raise FileExistsError(f"A {kind[:-1]} with id '{card.id}' already exists")
     data = card.model_dump(exclude_none=True, exclude_defaults=False)
-    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
+    path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
     return path
 
 
 def delete(kind: str, card_id: str) -> None:
     for f in _dir(kind).glob("*.y*ml"):
         try:
-            if (yaml.safe_load(f.read_text()) or {}).get("id") == card_id:
+            if (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("id") == card_id:
                 f.unlink()
                 return
         except Exception:  # noqa: BLE001

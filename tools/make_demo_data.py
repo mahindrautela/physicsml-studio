@@ -4,22 +4,25 @@
                     shape (10, 21, 2, 128, 128) - same layout as MORPH's FNS-KF demo
   burgers1d.npy     1D viscous Burgers equation, shape (16, 21, 256)
 
-Both are simulated here with a pseudo-spectral solver (about half a minute on a
-laptop). Usage:  python tools/make_demo_data.py [--out workspace/demo] [--force]
+Both are simulated here with a pseudo-spectral solver (10-60 seconds, depending
+on the computer). Usage:  python tools/make_demo_data.py [--out workspace/demo] [--force]
 """
 from __future__ import annotations
 
 import argparse
 import time
 from pathlib import Path
+from typing import Callable, Optional
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def kolmogorov(n_traj=10, n=128, steps_out=21, dt=0.005, out_every=0.5, spinup=5.0,
-               nu=1e-3, drag=0.1, kf=4, amp=0.2, seed=0) -> np.ndarray:
+def kolmogorov(n_traj=10, n=128, steps_out=21, dt=0.01, out_every=0.5, spinup=3.0,
+               nu=1e-3, drag=0.1, kf=4, amp=0.2, seed=0,
+               progress: Optional[Callable[[float], None]] = None) -> np.ndarray:
+    # dt=0.01 is stable for these settings; 0.0125 already blows up.
     rng = np.random.default_rng(seed)
     k = np.fft.fftfreq(n, 1.0 / n)
     kr = np.fft.rfftfreq(n, 1.0 / n)
@@ -59,6 +62,8 @@ def kolmogorov(n_traj=10, n=128, steps_out=21, dt=0.005, out_every=0.5, spinup=5
     step = 0
     total = n_spin + n_out * (steps_out - 1)
     for s in range(total + 1):
+        if progress and s % (total // 10) == 0:
+            progress(s / total)
         if s >= n_spin and (s - n_spin) % n_out == 0:
             out[:, (s - n_spin) // n_out] = velocity(w_hat)
             step += 1
@@ -71,7 +76,8 @@ def kolmogorov(n_traj=10, n=128, steps_out=21, dt=0.005, out_every=0.5, spinup=5
     return out
 
 
-def burgers(n_traj=16, n=256, steps_out=21, dt=2e-4, out_every=0.1, nu=0.02, seed=1) -> np.ndarray:
+def burgers(n_traj=16, n=256, steps_out=21, dt=2e-4, out_every=0.1, nu=0.02, seed=1,
+            progress: Optional[Callable[[float], None]] = None) -> np.ndarray:
     rng = np.random.default_rng(seed)
     x = np.linspace(0, 2 * np.pi, n, endpoint=False)
     k = np.fft.rfftfreq(n, 1.0 / n)
@@ -91,7 +97,10 @@ def burgers(n_traj=16, n=256, steps_out=21, dt=2e-4, out_every=0.1, nu=0.02, see
     n_out = int(round(out_every / dt))
     out = np.empty((n_traj, steps_out, n), dtype=np.float32)
     prev = nl(u_hat)
-    for s in range(n_out * (steps_out - 1) + 1):
+    total = n_out * (steps_out - 1)
+    for s in range(total + 1):
+        if progress and s % (total // 10) == 0:
+            progress(s / total)
         if s % n_out == 0:
             out[:, s // n_out] = np.fft.irfft(u_hat, n=n)
         cur = nl(u_hat)
@@ -108,18 +117,18 @@ def main(argv=None):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     jobs = {"kolmogorov2d.npy": kolmogorov, "burgers1d.npy": burgers}
-    for name, fn in jobs.items():
+    for name, simulate in jobs.items():
         f = out / name
         if f.exists() and not a.force:
-            print(f"✓ {f} already exists")
+            print(f"  {name}: already there")
             continue
         t0 = time.time()
-        print(f"… simulating {name}", flush=True)
-        arr = fn()
+        print(f"  {name}: ", end="", flush=True)
+        arr = simulate(progress=lambda frac: print(f"{frac:.0%} ", end="", flush=True))
         if not np.all(np.isfinite(arr)):
             raise SystemExit(f"{name}: simulation blew up (non-finite values)")
         np.save(f, arr)
-        print(f"✓ {f}  shape {arr.shape}  ({time.time() - t0:.0f}s)")
+        print(f"done in {time.time() - t0:.0f}s, shape {arr.shape}", flush=True)
 
 
 if __name__ == "__main__":

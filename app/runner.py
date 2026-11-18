@@ -186,7 +186,9 @@ class Runner:
 
         with self.store.lock:
             self.run["dataset_info"][dataset_id] = handle.info() | {"eval_indices": indices}
-        _save_array(truth_file(self.run["id"], dataset_id), X[:self.settings.viz_samples])
+        truth = truth_file(self.run["id"], dataset_id)
+        if not truth.exists():  # written once; the viewer may have it open, and Windows locks open files
+            _save_array(truth, X[:self.settings.viz_samples])
         self._data[dataset_id] = X
         while len(self._data) > 1 and sum(a.nbytes for a in self._data.values()) > DATA_CACHE_BYTES:
             self._data.popitem(last=False)  # forget the least recently used dataset

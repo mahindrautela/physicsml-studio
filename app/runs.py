@@ -84,7 +84,7 @@ class RunStore:
         file = run_dir(run_id) / "run.json"
         if not file.exists():
             raise KeyError(run_id)
-        return json.loads(file.read_text())
+        return json.loads(file.read_text(encoding="utf-8"))
 
     def list(self) -> list[dict]:
         """Short summaries of all runs, newest first."""
@@ -133,7 +133,7 @@ class RunStore:
             folder = run_dir(run["id"])
             folder.mkdir(parents=True, exist_ok=True)
             tmp = folder / "run.json.tmp"
-            tmp.write_text(json.dumps(run, indent=1, default=str))
+            tmp.write_text(json.dumps(run, indent=1, default=str), encoding="utf-8")
             tmp.replace(folder / "run.json")  # atomic: the page never reads a half-written file
 
     # ---- internals
@@ -150,7 +150,7 @@ class RunStore:
         """Runs that were going when the server stopped can't continue; say so."""
         for file in RUNS_DIR.glob("*/run.json"):
             try:
-                run = json.loads(file.read_text())
+                run = json.loads(file.read_text(encoding="utf-8"))
             except ValueError:
                 continue
             if run.get("status") in ACTIVE:
